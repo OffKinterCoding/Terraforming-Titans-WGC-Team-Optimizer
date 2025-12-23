@@ -4,8 +4,8 @@
 a = Analysis(
     ['solver.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
+    binaries=[('C:/Users/matte/Anaconda3/Lib/site-packages/pulp/solverdir/cbc/win/i64/cbc.exe', 'pulp/solverdir/cbc/win/i64/')],
+    datas=[('tt.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

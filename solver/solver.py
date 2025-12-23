@@ -1,9 +1,12 @@
 import numpy as np
 import pulp # type: ignore
+
 from enum import Enum
 
 import tkinter as tk
 from tkinter import ttk
+import sys
+import os
 
 class JOB(Enum):
     Soldier = 1
@@ -355,7 +358,12 @@ col_width = [10,15,10,10,10,10,10]
 # Slot rows
 class_options = ["Soldier", "Natural Scientist", "Social Scientist"]
 class_vars = []
+class_dropdown_vars = []
 lvl_vars = []
+lvl_dropdown_vars = []
+soldier_result_vars = []
+others_result_vars = []
+hidable_soldier_level_entries = []
 
 LIGHT_THEME = {
     "bg": "#f0f0f0",
@@ -367,7 +375,7 @@ LIGHT_THEME = {
     "disabled_fg": "gray40",
     "button_bg": "#e6e6e6",
     "button_fg": "#000000",
-    "error_fg": "#DB2121",
+    "error_fg": "#DD0000",
     "border": "#cccccc"
 }
 
@@ -381,7 +389,7 @@ DARK_THEME = {
     "disabled_fg": "#dddddd",
     "button_bg": "#444444",
     "button_fg": "#ffffff",
-    "error_fg": "#ff6b6b",
+    "error_fg": "#FF482A",
     "border": "#777777"
 }
 
@@ -398,15 +406,18 @@ def validate_user_inputs():
     all_vars = class_vars + lvl_vars + top_inputs
     
     for var, name in zip(all_vars, users_info.keys()):
-        value = var.get()
+        users_info[name] = var.get().strip()
         #print(f"{name}: {value}")
 
-        # adjust conditions as needed
-        if value is None or value == "":
-           err_msg.set("Not all inputs filled.")
-           return {} # stop immediately if anything is unset
+    #print(users_info["Job1"])
+    for user_key in users_info:
+        value = users_info[user_key]
+        #print(f"{user_key}: {(value is None or value == "")} and {(user_key != "SoldierLvl")} or {(users_info["Job1"] != "Soldier")}")
+        if (value is None or value == "") and (user_key != "SoldierLvl" or users_info["Job1"] == "Soldier"):
+            err_msg.set("Not all inputs filled.")
+            #print()
+            return {} # stop immediately if anything is unset
 
-        users_info[name] = value
     
     err_msg.set("")
     return users_info
@@ -419,7 +430,6 @@ def calculate_and_set():
     
     option = [JOB.toEnumOption(users_info["Job1"]), JOB.toEnumOption(users_info["Job2"]), JOB.toEnumOption(users_info["Job3"])]
     leaderLvl = convert_to_skill_point(int(users_info["LeaderLvl"]), True)
-    soldieLvl = convert_to_skill_point(int(users_info["SoldierLvl"]), False)
     othersLvl = convert_to_skill_point(int(users_info["OthersLvl"]), False)
     obstLvl = 1 + int(users_info["Obst"])/100
     shotLvl = 1 + int(users_info["Shoot"])/100
@@ -429,6 +439,7 @@ def calculate_and_set():
     best_distr = [-100]
     
     if option[0] == JOB.Soldier:
+        soldieLvl = convert_to_skill_point(int(users_info["SoldierLvl"]), False)
         for haz in HAZARD:
             results = solve_maxmin_soldier(obst_lvl=obstLvl,
                                             shoot_lvl=shotLvl,
@@ -489,6 +500,14 @@ def calculate_and_set():
 ####### Helper Functions #######
 ################################    
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 def only_digits(P):
     return P.isdigit() or P == ""   # allow empty (for backspace)
 
@@ -509,6 +528,7 @@ def create_entry(row, col, var, rowspan=1, sticky=""):
         rowspan=rowspan,
         sticky=sticky
     )
+    return entry
 
 def create_level_entry(row, lvl_var, rowspan=1, sticky=""):
     lvl_entry = ttk.Entry(
@@ -528,8 +548,29 @@ def create_level_entry(row, lvl_var, rowspan=1, sticky=""):
         rowspan=rowspan,
         sticky=sticky
     )
-    lvl_vars.append(lvl_var)
+    return lvl_entry
 
+def on_combo_change(event=None):
+    if class_vars[0].get() != "Soldier":
+        # Hide entry
+        lvl_dropdown_vars[1].grid_remove()
+        for soldier_result_var in soldier_result_vars:
+            soldier_result_var.grid_remove()
+            
+        # Move & resize entry
+        lvl_dropdown_vars[2].grid_configure(row=4, rowspan=3)
+        for others_result_var in others_result_vars:
+            others_result_var.grid_configure(row=4, rowspan=3)
+    else:
+        # Show entry again
+        lvl_dropdown_vars[1].grid()
+        for soldier_result_var in soldier_result_vars:
+            soldier_result_var.grid()
+            
+        # Restore layout
+        lvl_dropdown_vars[2].grid_configure(row=5, rowspan=2)
+        for others_result_var in others_result_vars:
+            others_result_var.grid_configure(row=5, rowspan=2)
 
 def close_window(event):
     root.destroy()
@@ -553,6 +594,8 @@ def apply_theme(theme):
                 activeforeground=theme["entry_fg"]
             )
 
+    err_msg_label.configure(fg=theme["error_fg"])
+    
     # ttk styling
     style.configure(
         "App.TCombobox",
@@ -671,7 +714,7 @@ style.map(
     background=[("active", curr_theme["hover_bg"])],
 )
 
-icon = tk.PhotoImage(file="tt.png")
+icon = tk.PhotoImage(file=resource_path("tt.png"))
 root.iconphoto(True, icon)
 
 # Top labels
@@ -717,6 +760,7 @@ library_entry.grid(row=1, column=2, padx=5, pady=5)
 success_var = tk.StringVar()
 success_dropdown = ttk.Combobox(root, textvariable=success_var, width=col_width[3], style="App.TCombobox", 
                                 values=[str(i) + "%" for i in range(100,49,-10)], state="readonly")
+success_dropdown.current(0)
 success_dropdown.grid(row=1, column=3, padx=5, pady=5)
 
 top_inputs = [shoot_entry, obstacle_entry, library_entry, success_var]
@@ -743,14 +787,22 @@ for i in range(4):
     else:
         class_dropdown = ttk.Combobox(root, textvariable=c_var, values=class_options, style="App.TCombobox", width=col_width[1], justify="center", state="readonly")
         class_dropdown.grid(row=i+3, column=1, padx=5, pady=5)
+        class_dropdown.current(i-1)
+        
+        class_dropdown_vars.append(class_dropdown)
         class_vars.append(c_var)
+        
+class_dropdown_vars[0].bind("<<ComboboxSelected>>", on_combo_change)
 
 leader_lvl_var = tk.StringVar()
 soldie_lvl_var = tk.StringVar()
 others_lvl_var = tk.StringVar()
-create_level_entry(3, leader_lvl_var)  # Leader level
-create_level_entry(4, soldie_lvl_var)  # Soldier's level
-create_level_entry(5, others_lvl_var, rowspan=2, sticky="ns")  # Others' level
+lvl_vars.append(leader_lvl_var)
+lvl_vars.append(soldie_lvl_var)
+lvl_vars.append(others_lvl_var)
+lvl_dropdown_vars.append(create_level_entry(3, leader_lvl_var))  # Leader level
+lvl_dropdown_vars.append(create_level_entry(4, soldie_lvl_var))  # Soldier's level
+lvl_dropdown_vars.append(create_level_entry(5, others_lvl_var, rowspan=2, sticky="ns"))  # Others' level
 
 ################################
 ### PAW that gets calculated ###
@@ -768,17 +820,23 @@ create_entry(3, 6, leader_wit_var)
 soldie_power_var = tk.StringVar()
 soldie_ath_var = tk.StringVar()
 soldie_wit_var = tk.StringVar()
-create_entry(4, 4, soldie_power_var)
-create_entry(4, 5, soldie_ath_var)
-create_entry(4, 6, soldie_wit_var)
+soldier_result_vars.append(create_entry(4, 4, soldie_power_var))
+soldier_result_vars.append(create_entry(4, 5, soldie_ath_var))
+soldier_result_vars.append(create_entry(4, 6, soldie_wit_var))
 
 # Power, Athlete, Wit (Others)
 others_power_var = tk.StringVar()
 others_ath_var = tk.StringVar()
 others_wit_var = tk.StringVar()
-create_entry(5, 4, others_power_var, rowspan=2, sticky="ns")
-create_entry(5, 5, others_ath_var, rowspan=2, sticky="ns")
-create_entry(5, 6, others_wit_var, rowspan=2, sticky="ns")
+others_result_vars.append(create_entry(5, 4, others_power_var, rowspan=2, sticky="ns"))
+others_result_vars.append(create_entry(5, 5, others_ath_var, rowspan=2, sticky="ns"))
+others_result_vars.append(create_entry(5, 6, others_wit_var, rowspan=2, sticky="ns"))
+
+################################
+## Combobox Modifying Entries ##
+################################
+
+
 
 ################################
 ##### Open window to center ####
