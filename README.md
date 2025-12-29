@@ -27,4 +27,4 @@ Below that are the point distributions for each team member. Please note that be
 
 
 ## Disclaimer
-This optimizer works best when you go soldier, natural scientist, social scientist. Having 2 soldiers is possible and works 99% of the time.
+This optimizer works best when you go soldier, natural scientist, social scientist. Having 2 soldiers is possible and works 99% of the time, however it may sometimes fail. Usually this can be solved by lowering the difficulty level by 1.
