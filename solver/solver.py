@@ -86,11 +86,11 @@ def solve_maxmin_no_soldier(obst_lvl,
     w1 = pulp.LpVariable("w1")
     
     # y values
-    y11 = 1.5* x11
-    y31 = a1 + 0.5 * x11
+    y11 = x11
+    y41 = a1 + 0.5 * x11
 
-    y12 = 1.5 * x12
-    y32 = a2 + 0.5 * x12
+    y12 = x12
+    y42 = a2 + 0.5 * x12
     
     # Binaries
     b1 = pulp.LpVariable("b1_w1", cat="Binary")
@@ -101,19 +101,19 @@ def solve_maxmin_no_soldier(obst_lvl,
     prob += (x11 + x12 + x13 == skill_leader)
     prob += (a1 + a2 + a3 == skill_other)
     prob += w0 <= y11
-    prob += w0 <= y31
+    prob += w0 <= y41
     prob += w1 >= y12
-    prob += w1 >= y32
+    prob += w1 >= y42
     
     prob += b1 + b3 == 1
     prob += w1 <= y12 + M * (1 - b1)
-    prob += w1 <= y32 + M * (1 - b3)
+    prob += w1 <= y42 + M * (1 - b3)
     
     # z definitions (reduced & linearized)
     z0 = (w0 * shoot_lvl + roll_indiv - 10) / 1.5
     z1 = (w1 * obst_lvl + roll_indiv - (10*haz_mod[3])) / (1.5*haz_mod[3])
-    z2 = 1.5 * x13 if use_leader_nat_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - 10) / 1.5
-    z3 = 1.5 * x13 if use_leader_soc_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - (10*haz_mod[0])) / (1.5*haz_mod[0])
+    z2 = lib_lvl * x13 + roll_indiv - 10 if use_leader_nat_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - 10) / 1.5
+    z3 = lib_lvl * x13 + roll_indiv - 10 if use_leader_soc_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - (10*haz_mod[0])) / (1.5*haz_mod[0])
 
     z4 = (shoot_lvl * (x11 + (3 + nb_soldier) * a1) + roll_group - (40*haz_mod[1])) / (4*haz_mod[1])
     z5 = (obst_lvl * (x12 + 3 * a2) + roll_group - (40*haz_mod[3])) / (4*haz_mod[3])
@@ -142,8 +142,8 @@ def solve_maxmin_no_soldier(obst_lvl,
     z_values = {
         "z0": ((a_vals[0] + 0.5 * x1_vals[0]) * shoot_lvl + roll_indiv - 10) / 1.5,
         "z1": ((a_vals[1] + 0.5 * x1_vals[1]) * obst_lvl + roll_indiv - (10 * haz_mod[3])) / (1.5 * haz_mod[3]),
-        "z2": 1.5 * x1_vals[2] if use_leader_nat_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - 10) / 1.5,
-        "z3": 1.5 * x1_vals[2] if use_leader_soc_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - (10 * haz_mod[0])) / (1.5 * haz_mod[0]),
+        "z2": lib_lvl * x1_vals[2] if use_leader_nat_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - 10) / 1.5,
+        "z3": lib_lvl * x1_vals[2] if use_leader_soc_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - (10 * haz_mod[0])) / (1.5 * haz_mod[0]),
         "z4": (shoot_lvl * (x1_vals[0] + (3 + nb_soldier) * a_vals[0]) + roll_group - (40 * haz_mod[1])) / (4 * haz_mod[1]),
         "z5": (obst_lvl * (x1_vals[1] + 3 * a_vals[1]) + roll_group - (40 * haz_mod[3])) / (4 * haz_mod[3]),
         "z6": (lib_lvl * (x1_vals[2] + (3.5 - (nb_soldier * 0.5)) * a_vals[2]) + roll_group - (40 * haz_mod[2])) / (4 * haz_mod[2])
@@ -209,13 +209,13 @@ def solve_maxmin_soldier(obst_lvl,
     w1 = pulp.LpVariable("w1")
     
     # y values
-    y11 = 1.5* x11
+    y11 = x11
     y21 = x21 + 0.5 * x11
-    y31 = a1 + 0.5 * x11
+    y41 = a1 + 0.5 * x11
 
-    y12 = 1.5 * x12
+    y12 = x12
     y22 = x22 + 0.5 * x12
-    y32 = a2 + 0.5 * x12
+    y42 = a2 + 0.5 * x12
     
     # Binaries
     b1 = pulp.LpVariable("b1_w1", cat="Binary")
@@ -229,21 +229,21 @@ def solve_maxmin_soldier(obst_lvl,
     prob += (a1 + a2 + a3 == skill_other)
     prob += w0 <= y11
     prob += w0 <= y21
-    prob += w0 <= y31
+    prob += w0 <= y41
     prob += w1 >= y12
     prob += w1 >= y22
-    prob += w1 >= y32
+    prob += w1 >= y42
     
     prob += b1 + b2 + b3 == 1
     prob += w1 <= y12 + M * (1 - b1)
     prob += w1 <= y22 + M * (1 - b2)
-    prob += w1 <= y32 + M * (1 - b3)
+    prob += w1 <= y42 + M * (1 - b3)
     
     # z definitions (reduced & linearized)
     z0 = (w0 * shoot_lvl + roll_indiv - 10) / 1.5
     z1 = (w1 * obst_lvl + roll_indiv - (10*haz_mod[3])) / (1.5*haz_mod[3])
-    z2 = 1.5 * x13 if use_leader_nat_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - 10) / 1.5
-    z3 = 1.5 * x13 if use_leader_soc_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - (10*haz_mod[0])) / (1.5*haz_mod[0])
+    z2 = lib_lvl * x13 + roll_indiv - 10 if use_leader_nat_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - 10) / 1.5
+    z3 = lib_lvl * x13 + roll_indiv - 10 if use_leader_soc_sci else ((a3 + 0.5 * x13) * lib_lvl + roll_indiv - (10*haz_mod[0])) / (1.5*haz_mod[0])
 
     z4 = (shoot_lvl * (x11 + x21 * 2 + (2 + nb_soldier) * a1) + roll_group - (40*haz_mod[1])) / (4*haz_mod[1])
     z5 = (obst_lvl * (x12 + x22 + 2 * a2) + roll_group - (40*haz_mod[3])) / (4*haz_mod[3])
@@ -273,8 +273,8 @@ def solve_maxmin_soldier(obst_lvl,
     z_values = {
         "z0": (w0.varValue * shoot_lvl + roll_indiv - 10) / 1.5,
         "z1": (w1.varValue * obst_lvl + roll_indiv - (10 * haz_mod[3])) / (1.5 * haz_mod[3]),
-        "z2": 1.5 * x1_vals[2] if use_leader_nat_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - 10) / 1.5,
-        "z3": 1.5 * x1_vals[2] if use_leader_soc_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - (10 * haz_mod[0])) / (1.5 * haz_mod[0]),
+        "z2": lib_lvl * x1_vals[2] if use_leader_nat_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - 10) / 1.5,
+        "z3": lib_lvl * x1_vals[2] if use_leader_soc_sci else ((a_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - (10 * haz_mod[0])) / (1.5 * haz_mod[0]),
         "z4": (shoot_lvl * (x1_vals[0] + x2_vals[0] * 2 + (2 + nb_soldier) * a_vals[0]) + roll_group - (40 * haz_mod[1])) / (4 * haz_mod[1]),
         "z5": (obst_lvl * (x1_vals[1] + x2_vals[1] + 2 * a_vals[1]) + roll_group - (40 * haz_mod[3])) / (4 * haz_mod[3]),
         "z6": (lib_lvl * (x1_vals[2] + x2_vals[2] + (3 - (nb_soldier * 0.5)) * a_vals[2]) + roll_group - (40 * haz_mod[2])) / (4 * haz_mod[2])
@@ -287,6 +287,155 @@ def solve_maxmin_soldier(obst_lvl,
         "x1": x1_vals.astype(int),
         "x2": x2_vals.astype(int),
         "a": a_vals.astype(int),
+        "z": z_values
+    }
+def solve_maxmin_soldier_two_or_three(obst_lvl,
+                        shoot_lvl,
+                        lib_lvl,
+                        skill_leader,
+                        skill_soldier_1,
+                        skill_soldier_2,
+                        skill_other,
+                        roll_indiv = 1,
+                        roll_group = 4,
+                        options = [JOB.Soldier, JOB.Nat_Scientist, JOB.Soc_Scientist],
+                        hazard_approach = HAZARD.Neutral,
+                        verbose=False,
+                        get_integer_results = False):
+    # Conditional branching
+    use_leader_nat_sci = all(j != JOB.Nat_Scientist for j in options)
+    use_leader_soc_sci = all(j != JOB.Soc_Scientist for j in options)
+    nb_soldier = options.count(JOB.Soldier) - 2
+    haz_mod = hazard_approach._value_
+    
+    # Define the problem
+    prob = pulp.LpProblem("MaxMinProblem", pulp.LpMaximize)
+    
+    # Decision variables
+    x11 = pulp.LpVariable("x11", lowBound=1, cat="Integer")
+    x12 = pulp.LpVariable("x12", lowBound=1, cat="Integer")
+    x13 = pulp.LpVariable("x13", lowBound=1, cat="Integer")
+    
+    # Soldier 1 variables
+    x21 = pulp.LpVariable("x21", lowBound=1, cat="Integer")
+    x22 = pulp.LpVariable("x22", lowBound=1, cat="Integer")
+    x23 = pulp.LpVariable("x23", lowBound=0, cat="Integer")
+    
+    # Soldier 2 variables
+    x31 = pulp.LpVariable("x31", lowBound=1, cat="Integer")
+    x32 = pulp.LpVariable("x32", lowBound=1, cat="Integer")
+    x33 = pulp.LpVariable("x33", lowBound=0, cat="Integer")
+    
+    # Covering all cases
+    a1_bound = 1
+    a2_bound = 1
+    a3_bound = 2
+
+    if nb_soldier == 0: # No soldiers = lower bound for pow/ath doesn't matter
+        a1_bound = 0
+        a2_bound = 0
+    else: # All soldiers = lower bound for wit doesn't matter
+        a3_bound = 0
+    x41 = pulp.LpVariable("x41", lowBound=a1_bound, cat="Integer")
+    x42 = pulp.LpVariable("x42", lowBound=a2_bound, cat="Integer")
+    x43 = pulp.LpVariable("x43", lowBound=a3_bound, cat="Integer")
+    
+    t = pulp.LpVariable("t", cat="Continuous")  # max-min varValue
+    
+    # Auxiliary variables for min/max
+    w0 = pulp.LpVariable("w0")
+    w1 = pulp.LpVariable("w1")
+    
+    # y values
+    y11 = x11
+    y21 = x21 + 0.5 * x11
+    y31 = x31 + 0.5 * x11
+    y41 = x41 + 0.5 * x11
+
+    y12 = x12
+    y22 = x22 + 0.5 * x12
+    y32 = x32 + 0.5 * x12
+    y42 = x42 + 0.5 * x12
+    
+    # Binaries
+    b1 = pulp.LpVariable("b1_w1", cat="Binary")
+    b2 = pulp.LpVariable("b2_w1", cat="Binary")
+    b3 = pulp.LpVariable("b3_w1", cat="Binary")
+    b4 = pulp.LpVariable("b4_w1", cat="Binary")
+    M = 10_000
+
+    # Row-sum constraints
+    prob += (x11 + x12 + x13 == skill_leader)
+    prob += (x21 + x22 + x23 == skill_soldier_1)
+    prob += (x31 + x32 + x33 == skill_soldier_2)
+    prob += (x41 + x42 + x43 == skill_other)
+    
+    prob += w0 <= y11
+    prob += w0 <= y21
+    prob += w0 <= y31
+    prob += w0 <= y41
+    
+    prob += w1 >= y12
+    prob += w1 >= y22
+    prob += w1 >= y32
+    prob += w1 >= y42
+    
+    prob += b1 + b2 + b3 + b4 == 1
+    prob += w1 <= y12 + M * (1 - b1)
+    prob += w1 <= y22 + M * (1 - b2)
+    prob += w1 <= y32 + M * (1 - b3)
+    prob += w1 <= y42 + M * (1 - b4)
+    
+    # z definitions (reduced & linearized)
+    z0 = (w0 * shoot_lvl + roll_indiv - 10) / 1.5
+    z1 = (w1 * obst_lvl + roll_indiv - (10*haz_mod[3])) / (1.5*haz_mod[3])
+    z2 = lib_lvl * x13 + roll_indiv - 10 if use_leader_nat_sci else ((x43 + 0.5 * x13) * lib_lvl + roll_indiv - 10) / 1.5
+    z3 = lib_lvl * x13 + roll_indiv - 10 if use_leader_soc_sci else ((x43 + 0.5 * x13) * lib_lvl + roll_indiv - (10*haz_mod[0])) / (1.5*haz_mod[0])
+
+    z4 = (shoot_lvl * (x11 + x21 * 2 + x31 * 2 + (1 + nb_soldier) * x41) + roll_group - (40*haz_mod[1])) / (4*haz_mod[1])
+    z5 = (obst_lvl * (x12 + x22 + x32 + x42) + roll_group - (40*haz_mod[3])) / (4*haz_mod[3])
+    z6 = (lib_lvl * (x13 + x23 + x33 + (1.5 - (nb_soldier * 0.5)) * x43) + roll_group - (40*haz_mod[2])) / (4*haz_mod[2])
+
+    # Max–min constraints
+    for z in [z0, z1, z2, z3, z4, z5, z6]:
+        prob += t <= z
+
+    # Objective
+    prob += t
+
+    # Solve
+    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+
+    if verbose:
+        print(f"Conditions: {options}; {hazard_approach}")
+        print("status:", pulp.LpStatus[prob.status])
+        print("t:", t.varValue)
+        print("x1:", x11.varValue, x12.varValue, x13.varValue)
+        print("a :", x41.varValue, x42.varValue, x43.varValue)
+    
+    
+    x1_vals = np.array([x11.varValue, x12.varValue, x13.varValue])
+    x2_vals = np.array([x21.varValue, x22.varValue, x23.varValue])
+    x3_vals = np.array([x31.varValue, x32.varValue, x33.varValue])
+    x4_vals = np.array([x41.varValue, x42.varValue, x43.varValue])
+    z_values = {
+        "z0": (w0.varValue * shoot_lvl + roll_indiv - 10) / 1.5,
+        "z1": (w1.varValue * obst_lvl + roll_indiv - (10 * haz_mod[3])) / (1.5 * haz_mod[3]),
+        "z2": lib_lvl * x1_vals[2] if use_leader_nat_sci else ((x4_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - 10) / 1.5,
+        "z3": lib_lvl * x1_vals[2] if use_leader_soc_sci else ((x4_vals[2] + 0.5 * x1_vals[2]) * lib_lvl + roll_indiv - (10 * haz_mod[0])) / (1.5 * haz_mod[0]),
+        "z4": (shoot_lvl * (x1_vals[0] + x2_vals[0] * 2 + x3_vals[0] * 2 + (1 + nb_soldier) * x4_vals[0]) + roll_group - (40 * haz_mod[1])) / (4 * haz_mod[1]),
+        "z5": (obst_lvl * (x1_vals[1] + x2_vals[1] + x3_vals[1] + x4_vals[1]) + roll_group - (40 * haz_mod[3])) / (4 * haz_mod[3]),
+        "z6": (lib_lvl * (x1_vals[2] + x2_vals[2] + x3_vals[2] + (1.5 - (nb_soldier * 0.5)) * x4_vals[2]) + roll_group - (40 * haz_mod[2])) / (4 * haz_mod[2])
+    }
+    if get_integer_results:
+        z_values = {k: int(v) for k,v in z_values.items()}
+    
+    return {
+        "t": t.varValue,
+        "x1": x1_vals.astype(int),
+        "x2": x2_vals.astype(int),
+        "x3": x3_vals.astype(int),
+        "a": x4_vals.astype(int), # Should be x4 but for consistency keep as 'a'
         "z": z_values
     }
 
@@ -361,7 +510,8 @@ class_vars = []
 class_dropdown_vars = []
 lvl_vars = []
 lvl_dropdown_vars = []
-soldier_result_vars = []
+soldier_1_result_vars = []
+soldier_2_result_vars = []
 others_result_vars = []
 hidable_soldier_level_entries = []
 
@@ -401,7 +551,7 @@ curr_theme = DARK_THEME
 
 def validate_user_inputs():
     global class_vars, lvl_vars, top_inputs, err_msg
-    users_info = {"Job1":"", "Job2": "", "Job3": "", "LeaderLvl": "", "SoldierLvl": "", "OthersLvl": "", "Shoot": "", "Obst": "", "Lib": "", "Success": ""}
+    users_info = {"Job1":"", "Job2": "", "Job3": "", "LeaderLvl": "", "SoldierLvl1": "", "SoldierLvl2": "", "OthersLvl": "", "Shoot": "", "Obst": "", "Lib": "", "Success": ""}
     #print(f"{type(class_vars)} {type(lvl_vars)} {type(top_inputs)}")
     all_vars = class_vars + lvl_vars + top_inputs
     
@@ -413,7 +563,8 @@ def validate_user_inputs():
     for user_key in users_info:
         value = users_info[user_key]
         #print(f"{user_key}: {(value is None or value == "")} and {(user_key != "SoldierLvl")} or {(users_info["Job1"] != "Soldier")}")
-        if (value is None or value == "") and (user_key != "SoldierLvl" or users_info["Job1"] == "Soldier"):
+        if ((value is None or value == "") and (user_key != "SoldierLvl1" or users_info["Job1"] == "Soldier")) and\
+                                               ((user_key != "SoldierLvl2" or users_info["Job2"] == "Soldier")):
             err_msg.set("Not all inputs filled.")
             #print()
             return {} # stop immediately if anything is unset
@@ -438,14 +589,34 @@ def calculate_and_set():
     
     best_distr = [-100]
     
-    if option[0] == JOB.Soldier:
-        soldieLvl = convert_to_skill_point(int(users_info["SoldierLvl"]), False)
+    if option[0] == JOB.Soldier and option[1] == JOB.Soldier:
+        soldieLvl1 = convert_to_skill_point(int(users_info["SoldierLvl1"]), False)
+        soldieLvl2 = convert_to_skill_point(int(users_info["SoldierLvl2"]), False)
+        for haz in HAZARD:
+            results = solve_maxmin_soldier_two_or_three(obst_lvl=obstLvl,
+                                            shoot_lvl=shotLvl,
+                                            lib_lvl=librLvl,
+                                            skill_leader=leaderLvl,
+                                            skill_soldier_1=soldieLvl1,
+                                            skill_soldier_2=soldieLvl2,
+                                            skill_other=othersLvl,
+                                            roll_indiv=ri,
+                                            roll_group=rg,
+                                            options=option,
+                                            hazard_approach=haz,
+                                            verbose=False,
+                                            get_integer_results = True)
+            
+            if results["t"] > best_distr[0]:
+                best_distr = [results["t"], results, option, haz]
+    elif option[0] == JOB.Soldier:
+        soldieLvl1 = convert_to_skill_point(int(users_info["SoldierLvl1"]), False)
         for haz in HAZARD:
             results = solve_maxmin_soldier(obst_lvl=obstLvl,
                                             shoot_lvl=shotLvl,
                                             lib_lvl=librLvl,
                                             skill_leader=leaderLvl,
-                                            skill_soldier=soldieLvl,
+                                            skill_soldier=soldieLvl1,
                                             skill_other=othersLvl,
                                             roll_indiv=ri,
                                             roll_group=rg,
@@ -478,13 +649,22 @@ def calculate_and_set():
     leader_wit_var.set(res_best["x1"][2])
     
     if option[0] == JOB.Soldier:
-        soldie_power_var.set(res_best["x2"][0])
-        soldie_ath_var.set(res_best["x2"][1])
-        soldie_wit_var.set(res_best["x2"][2])
+        sold_1_power_var.set(res_best["x2"][0])
+        sold_1_ath_var.set(res_best["x2"][1])
+        sold_1_wit_var.set(res_best["x2"][2])
     else:
-        soldie_power_var.set(res_best["a"][0])
-        soldie_ath_var.set(res_best["a"][1])
-        soldie_wit_var.set(res_best["a"][2])
+        sold_1_power_var.set(res_best["a"][0])
+        sold_1_ath_var.set(res_best["a"][1])
+        sold_1_wit_var.set(res_best["a"][2])
+    
+    if option[0] == JOB.Soldier and option[1] == JOB.Soldier:
+        sold_2_power_var.set(res_best["x3"][0])
+        sold_2_ath_var.set(res_best["x3"][1])
+        sold_2_wit_var.set(res_best["x3"][2])
+    else:
+        sold_2_power_var.set(res_best["a"][0])
+        sold_2_ath_var.set(res_best["a"][1])
+        sold_2_wit_var.set(res_best["a"][2])
     
     others_power_var.set(res_best["a"][0])
     others_ath_var.set(res_best["a"][1])
@@ -551,26 +731,51 @@ def create_level_entry(row, lvl_var, rowspan=1, sticky=""):
     return lvl_entry
 
 def on_combo_change(event=None):
-    if class_vars[0].get() != "Soldier":
-        # Hide entry
-        lvl_dropdown_vars[1].grid_remove()
-        for soldier_result_var in soldier_result_vars:
-            soldier_result_var.grid_remove()
-            
-        # Move & resize entry
-        lvl_dropdown_vars[2].grid_configure(row=4, rowspan=3)
-        for others_result_var in others_result_vars:
-            others_result_var.grid_configure(row=4, rowspan=3)
-    else:
-        # Show entry again
+    if class_vars[0].get() == class_vars[1].get() == "Soldier":
+        # Show soldier 1 entry
         lvl_dropdown_vars[1].grid()
-        for soldier_result_var in soldier_result_vars:
+        for soldier_result_var in soldier_1_result_vars:
+            soldier_result_var.grid()
+        lvl_dropdown_vars[2].grid()
+        for soldier_result_var in soldier_2_result_vars:
             soldier_result_var.grid()
             
         # Restore layout
-        lvl_dropdown_vars[2].grid_configure(row=5, rowspan=2)
+        lvl_dropdown_vars[3].grid_configure(row=6, rowspan=1)
+        for others_result_var in others_result_vars:
+            others_result_var.grid_configure(row=6, rowspan=1)
+    elif class_vars[0].get() == "Soldier":
+        # Show soldier 1 entry
+        lvl_dropdown_vars[1].grid()
+        for soldier_result_var in soldier_1_result_vars:
+            soldier_result_var.grid()
+            
+        # Hide soldier 2 entry
+        lvl_dropdown_vars[2].grid_remove()
+        for soldier_result_var in soldier_2_result_vars:
+            soldier_result_var.grid_remove()
+            
+        # Restore layout
+        for soldier_result_var in soldier_2_result_vars:
+            soldier_result_var.grid_remove()
+        lvl_dropdown_vars[3].grid_configure(row=5, rowspan=2)
         for others_result_var in others_result_vars:
             others_result_var.grid_configure(row=5, rowspan=2)
+    else:
+        # Hide soldier 1 entry
+        lvl_dropdown_vars[1].grid_remove()
+        for soldier_result_var in soldier_1_result_vars:
+            soldier_result_var.grid_remove()
+            
+        # Hide soldier 2 entry
+        lvl_dropdown_vars[2].grid_remove()
+        for soldier_result_var in soldier_2_result_vars:
+            soldier_result_var.grid_remove()
+            
+        # Move & resize entry
+        lvl_dropdown_vars[3].grid_configure(row=4, rowspan=3)
+        for others_result_var in others_result_vars:
+            others_result_var.grid_configure(row=4, rowspan=3)
 
 def close_window(event):
     root.destroy()
@@ -793,15 +998,19 @@ for i in range(4):
         class_vars.append(c_var)
         
 class_dropdown_vars[0].bind("<<ComboboxSelected>>", on_combo_change)
+class_dropdown_vars[1].bind("<<ComboboxSelected>>", on_combo_change)
 
 leader_lvl_var = tk.StringVar()
-soldie_lvl_var = tk.StringVar()
+sold_1_lvl_var = tk.StringVar()
+sold_2_lvl_var = tk.StringVar()
 others_lvl_var = tk.StringVar()
 lvl_vars.append(leader_lvl_var)
-lvl_vars.append(soldie_lvl_var)
+lvl_vars.append(sold_1_lvl_var)
+lvl_vars.append(sold_2_lvl_var)
 lvl_vars.append(others_lvl_var)
 lvl_dropdown_vars.append(create_level_entry(3, leader_lvl_var))  # Leader level
-lvl_dropdown_vars.append(create_level_entry(4, soldie_lvl_var))  # Soldier's level
+lvl_dropdown_vars.append(create_level_entry(4, sold_1_lvl_var))  # Soldier's level
+lvl_dropdown_vars.append(create_level_entry(5, sold_2_lvl_var))  # Soldier's level
 lvl_dropdown_vars.append(create_level_entry(5, others_lvl_var, rowspan=2, sticky="ns"))  # Others' level
 
 ################################
@@ -817,12 +1026,20 @@ create_entry(3, 5, leader_ath_var)
 create_entry(3, 6, leader_wit_var)
 
 # Power, Athlete, Wit (Soldier)
-soldie_power_var = tk.StringVar()
-soldie_ath_var = tk.StringVar()
-soldie_wit_var = tk.StringVar()
-soldier_result_vars.append(create_entry(4, 4, soldie_power_var))
-soldier_result_vars.append(create_entry(4, 5, soldie_ath_var))
-soldier_result_vars.append(create_entry(4, 6, soldie_wit_var))
+sold_1_power_var = tk.StringVar()
+sold_1_ath_var = tk.StringVar()
+sold_1_wit_var = tk.StringVar()
+soldier_1_result_vars.append(create_entry(4, 4, sold_1_power_var))
+soldier_1_result_vars.append(create_entry(4, 5, sold_1_ath_var))
+soldier_1_result_vars.append(create_entry(4, 6, sold_1_wit_var))
+
+# Power, Athlete, Wit (Soldier)
+sold_2_power_var = tk.StringVar()
+sold_2_ath_var = tk.StringVar()
+sold_2_wit_var = tk.StringVar()
+soldier_2_result_vars.append(create_entry(5, 4, sold_2_power_var))
+soldier_2_result_vars.append(create_entry(5, 5, sold_2_ath_var))
+soldier_2_result_vars.append(create_entry(5, 6, sold_2_wit_var))
 
 # Power, Athlete, Wit (Others)
 others_power_var = tk.StringVar()
@@ -831,12 +1048,6 @@ others_wit_var = tk.StringVar()
 others_result_vars.append(create_entry(5, 4, others_power_var, rowspan=2, sticky="ns"))
 others_result_vars.append(create_entry(5, 5, others_ath_var, rowspan=2, sticky="ns"))
 others_result_vars.append(create_entry(5, 6, others_wit_var, rowspan=2, sticky="ns"))
-
-################################
-## Combobox Modifying Entries ##
-################################
-
-
 
 ################################
 ##### Open window to center ####
