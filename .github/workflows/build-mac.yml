@@ -1,0 +1,50 @@
+name: Build macOS app
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pulp
+
+      - name: Locate CBC solver
+        run: |
+          python - <<EOF
+          import pulp, os
+          print(pulp.__file__)
+          print(os.path.join(os.path.dirname(pulp.__file__), "solverdir"))
+          EOF
+      - name: Build macOS executable
+        run: |
+          pyinstaller \
+            --onefile \
+            --noconsole \
+            --add-data "tt.png:." \
+            --add-binary "$(python - <<EOF
+          import pulp, os
+          print(os.path.join(os.path.dirname(pulp.__file__), 'solverdir/cbc/osx/i64/cbc'))
+          EOF
+          ):pulp/solverdir/cbc/osx/i64" \
+            solver.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solver-mac
+          path: dist/solver
