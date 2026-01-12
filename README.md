@@ -1,5 +1,5 @@
 # Terraforming-Titans-WGC-Team-Optimizer
-A solver for the WGC team optimizer
+A solver for the WGC team optimizer.
 
 ## Instructions
 Open the exe. It'll take a while to open, usually 10 seconds.
@@ -28,3 +28,5 @@ Below that are the point distributions for each team member. Please note that be
 
 ## Disclaimer
 This optimizer works best when you go soldier, natural scientist, social scientist. Having 2 soldiers is possible and works 99% of the time, however it may sometimes fail. Usually this can be solved by lowering the difficulty level by 1.
+
+Additionally, sometimes the max level may go negative; this means that the optimizer cannot guarentee the team success chance. This generally only happens when you're below level 10, and in those scenarios, you'll just have to bite the bullet.
