@@ -30,6 +30,7 @@ jobs:
           print(pulp.__file__)
           print(os.path.join(os.path.dirname(pulp.__file__), "solverdir"))
           EOF
+
       - name: Build macOS executable
         run: |
           pyinstaller \
@@ -41,7 +42,7 @@ jobs:
           print(os.path.join(os.path.dirname(pulp.__file__), 'solverdir/cbc/osx/i64/cbc'))
           EOF
           ):pulp/solverdir/cbc/osx/i64" \
-            solver.py
+            solver/solver.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
