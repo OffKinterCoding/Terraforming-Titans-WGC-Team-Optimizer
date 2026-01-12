@@ -30,7 +30,6 @@ jobs:
           print(pulp.__file__)
           print(os.path.join(os.path.dirname(pulp.__file__), "solverdir"))
           EOF
-
       - name: Build macOS executable
         run: |
           pyinstaller \
