@@ -35,7 +35,7 @@ jobs:
           pyinstaller \
             --onefile \
             --noconsole \
-            --add-data "tt.png:." \
+            --add-data "solver/tt.png:solver" \
             --add-binary "$(python - <<EOF
           import pulp, os
           print(os.path.join(os.path.dirname(pulp.__file__), 'solverdir/cbc/osx/i64/cbc'))
